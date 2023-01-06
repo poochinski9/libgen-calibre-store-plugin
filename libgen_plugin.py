@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# License: GPLv3 Copyright: 2021, winnbyte
+# License: GPLv3 Copyright: 2023, poochinski9
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import urllib.parse
@@ -22,8 +22,6 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"
 #####################################################################
 # Plug-in base class
 #####################################################################
-
-
 def search_libgen(query, max_results=10, timeout=60):
     res = "25" if max_results <= 25 else "50" if max_results <= 50 else "100"
     search_url = f"{BASE_URL}/search.php?req={query.decode()}&res={res}&view=simple"
@@ -33,43 +31,27 @@ def search_libgen(query, max_results=10, timeout=60):
     raw = br.open(search_url).read()
     soup = BeautifulSoup(raw, "html5lib")
 
-    trs = soup.select('table[class="c"] > tbody > tr')
-    count = 0
-    for item in trs:
-        index = trs.index(item)
-        if count == max_results:
-            break
+    # Find the rows that represent each book, and skip the first item which is table headers
+    trs = soup.select('table[class="c"] > tbody > tr')[1:]
 
-        if index == 0:
-            continue
+    #map the trs to search results, filter out items that dont have a title or author, and limit it to max_results size
+    return [result for result in map(build_search_result, trs) if result.title and result.author][:max_results]
 
-        tds = item.select("td")
-
-        title = tds[2].select("a")[-1].text
-        detail_url = BASE_URL + "/" + tds[2].select("a")[-1].get("href")
-
-        libgen_id = int(tds[0].text)
-        author = tds[1].text
-        series = tds[2].select("a")[0].text if len(tds[2].select("a")) > 1 else None
-        publisher = tds[3].text
-        year = tds[4].text
-        pages = tds[5].text
-        language = tds[6].text
-        size = tds[7].text
-        extension = tds[8].text.upper()
-        mirror1_url = tds[9].select("a")[0].get("href")
-
-        if title and author:
-            s = LibgenSearchResult(libgen_id)
-            s.title = title
-            s.author = author
-            s.price = f"{size}\n{pages} pages\n{year}"  # use price column to display more info
-            s.detail_item = detail_url
-            s.formats = extension
-            s.drm = SearchResult.DRM_UNLOCKED
-            s.mirror1_url = mirror1_url
-            count += 1
-            yield s
+def build_search_result(tr):
+    tds = tr.select('td')
+    libgen_id = int(tds[0].text)
+    s = LibgenSearchResult(libgen_id)
+    s.title = tds[2].select_one("a:last-of-type").text
+    s.author = tds[1].text
+    s.detail_item = BASE_URL + "/" + tds[2].select_one("a:last-of-type").get("href")
+    size = tds[7].text
+    year = tds[4].text
+    pages = tds[5].text
+    s.price = f"{size}\n{pages} pages\n{year}"  # use price column to display more size, pages, year
+    s.formats = tds[8].text.upper()
+    s.drm = SearchResult.DRM_UNLOCKED
+    s.mirror1_url = tds[9].select_one("a:first-of-type").get("href")
+    return s
 
 
 class LibgenStorePlugin(BasicStoreConfig, StorePlugin):
