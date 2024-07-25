@@ -2,11 +2,9 @@
 
 This is a plugin for [Calibre](https://calibre-ebook.com/) which allows you to search [libgen.gs](https://libgen.gs) for books using Calibre's search for e-books feature
 
-Make sure you download the zip from the [Releases](https://github.com/poochinski9/libgen-calibre-store-plugin/releases) page.  Do not download the repo as a zip file or you may encounter issues.
-
 ## Installation
 
-- Download the zip file from the releases page
+- Download the zip file from the [Releases](https://github.com/poochinski9/libgen-calibre-store-plugin/releases) page
 - Open Calibre
 - Go to **Preferences -> Plugins -> Load Plugin from File** and select the zip file you downloaded.
 - Restart Calibre
