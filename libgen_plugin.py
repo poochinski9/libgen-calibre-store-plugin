@@ -40,9 +40,9 @@ logger = logging.getLogger(__name__)
 #####################################################################
 def search_libgen(query, max_results=10, timeout=60):
     res = "25" if max_results <= 25 else "50" if max_results <= 50 else "100"
-    search_url = f"{BASE_URL}/index.php?req={query.decode('utf-8')}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res={res}&filesuns=all&covers=on"
-    logger.info("searching: " + search_url)
-    logger.info("max results: " + str(max_results))
+    encoded_query = urllib.parse.quote(query)
+    search_url = f"{BASE_URL}/index.php?req={encoded_query}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res={res}&filesuns=all&covers=on"
+
     br = browser(user_agent=USER_AGENT)
     raw = br.open(search_url).read()
     soup = BeautifulSoup(raw, "html5lib")
@@ -53,7 +53,18 @@ def search_libgen(query, max_results=10, timeout=60):
     trs = soup.select('table[class="table table-striped"] > tbody > tr')
 
     # map the trs to search results, filter out items that dont have a title or author, and limit it to max_results size
-    return [result for result in map(build_search_result, trs) if result.title and result.author][:max_results]
+    results = []
+    for tr in trs:
+        try:
+            result = build_search_result(tr)
+            if result.title and result.author:
+                results.append(result)
+        except Exception as e:
+            logger.error(f"Error building search result: {e}")
+        if len(results) >= max_results:
+            break
+
+    return results[:max_results]
 
 
 def extract_indices(soup):
@@ -110,9 +121,7 @@ def build_search_result(tr):
 
     # Extracting size, pages, and year
     size = tds[size_index].text.strip()
-
     pages = tds[pages_index].text.strip()
-
     year = tds[year_index].text.strip()
 
     if pages == "0 pages":
@@ -123,23 +132,24 @@ def build_search_result(tr):
     # Extracting formats
     s.formats = tds[ext_index].text.strip().upper()
 
-    # Download url
-
     # Extracting the details URL
     first_link_in_last_td = tds[mirrors_index].find("a", href=True)
 
     # Details url:
-    s.detail_item = BASE_URL + first_link_in_last_td["href"].replace("get.php", "ads.php")
+    try:
+        s.detail_item = BASE_URL + first_link_in_last_td["href"].replace("get.php", "ads.php")
+    except:
+        s.detail_item = None
 
     # Setting DRM status
     s.drm = SearchResult.DRM_UNLOCKED
 
     # Extracting image
     try:
-        logger.info(tds[image_index])
         image_src = tds[image_index].find("img").get("src")
     except:
         image_src = None
+        logger.exception("Error extracting image src")
 
     if image_src:
         s.cover_url = BASE_URL + image_src
