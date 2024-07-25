@@ -1,6 +1,6 @@
 # Libgen Calibre Store Plugin
 
-This is a plugin for [Calibre](https://calibre-ebook.com/) which allows you to search [libgen.gs](https://libgen.is) for books using Calibre's search for e-books feature
+This is a plugin for [Calibre](https://calibre-ebook.com/) which allows you to search [libgen.gs](https://libgen.gs) for books using Calibre's search for e-books feature
 
 ## Installation
 
