@@ -31,7 +31,9 @@ ext_index = None
 mirrors_index = None
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +43,6 @@ logger = logging.getLogger(__name__)
 def search_libgen(query, max_results=10, timeout=60):
     res = "25" if max_results <= 25 else "50" if max_results <= 50 else "100"
     encoded_query = urllib.parse.quote(query)
-    search_url = f"{BASE_URL}/index.php?req={encoded_query}&ext=epub&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res={res}&filesuns=all&covers=on&gmode=on"
     search_url = f"{BASE_URL}/index.php?req={encoded_query}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res=25&covers=on&gmode=on&filesuns=all"
 
     br = browser(user_agent=USER_AGENT)
@@ -69,10 +70,10 @@ def search_libgen(query, max_results=10, timeout=60):
 
 
 def extract_indices(soup):
-    elements = ['Author(s)', 'Year', 'Pages', 'Size', 'Ext', 'Mirrors']
+    elements = ["Author(s)", "Year", "Pages", "Size", "Ext", "Mirrors"]
     indices = {}
 
-    for idx, th in enumerate(soup.find_all('th')):
+    for idx, th in enumerate(soup.find_all("th")):
         for element in elements:
             if element in th.get_text():
                 indices[element] = idx
@@ -81,36 +82,36 @@ def extract_indices(soup):
 
     image_index = 0
     title_index = 1
-    author_index = indices.get('Author(s)')
-    year_index = indices.get('Year')
-    pages_index = indices.get('Pages')
-    size_index = indices.get('Size')
-    ext_index = indices.get('Ext')
-    mirrors_index = indices.get('Mirrors')
+    author_index = indices.get("Author(s)")
+    year_index = indices.get("Year")
+    pages_index = indices.get("Pages")
+    size_index = indices.get("Size")
+    ext_index = indices.get("Ext")
+    mirrors_index = indices.get("Mirrors")
 
 
 def transform_download_url(url):
     # Pattern for the first format: /ads23875abc (where abc can be letters and numbers)
-    pattern1 = re.compile(r'/ads([a-fA-F0-9]+)')
+    pattern1 = re.compile(r"/ads([a-fA-F0-9]+)")
     # Pattern for the second format: /ads.php?md5=235798237abc (where abc can be letters and numbers)
-    pattern2 = re.compile(r'/ads\.php\?md5=([a-fA-F0-9]+)')
+    pattern2 = re.compile(r"/ads\.php\?md5=([a-fA-F0-9]+)")
 
     # Check and transform the first format
     match1 = pattern1.match(url)
     if match1:
-        return f'/get.php?md5={match1.group(1)}'
+        return f"/get.php?md5={match1.group(1)}"
 
     # Check and transform the second format
     match2 = pattern2.match(url)
     if match2:
-        return f'/get.php?md5={match2.group(1)}'
+        return f"/get.php?md5={match2.group(1)}"
 
     # If no match, return the original URL
     return url
 
 
 def build_search_result(tr):
-    tds = tr.find_all('td')
+    tds = tr.find_all("td")
     s = SearchResult()
 
     # Extracting the title
@@ -138,7 +139,9 @@ def build_search_result(tr):
 
     # Details url:
     try:
-        s.detail_item = BASE_URL + first_link_in_last_td["href"].replace("get.php", "ads.php")
+        s.detail_item = BASE_URL + first_link_in_last_td["href"].replace(
+            "get.php", "ads.php"
+        )
     except:
         s.detail_item = None
 
@@ -185,7 +188,7 @@ class LibgenStorePlugin(BasicStoreConfig, StorePlugin):
 
         soup2 = BeautifulSoup(raw, "html5lib")
         # Select the first <a> tag inside the div with id="download"
-        download_a = soup2.select_one('tr a')
+        download_a = soup2.select_one("tr a")
         if download_a:
             download_url = download_a.get("href")
         else:
