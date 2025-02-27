@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 def search_libgen(query, max_results=10, timeout=60):
     res = "25" if max_results <= 25 else "50" if max_results <= 50 else "100"
     encoded_query = urllib.parse.quote(query)
-    search_url = f"{BASE_URL}/index.php?req={encoded_query}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res=25&covers=on&gmode=on&filesuns=all"
+    search_url = f"{BASE_URL}/index.php?req={encoded_query}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res={res}&covers=on&gmode=on&filesuns=all"
 
     br = browser(user_agent=USER_AGENT)
     raw = br.open(search_url).read()
