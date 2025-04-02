@@ -19,7 +19,11 @@ For better results and to get the format you are looking for, narrow down your s
 
 ## Advanced Search Mode (Google Mode)
 
-Version 1.4.1 and greater supports Google mode.  Here is the guide from libgen.gs.  Use the "title" field in calibre for this.
+Version 1.4.1 and greater supports Google mode.  Use the "title" field in calibre for this.
+
+For example, to search only `epub` format, type `Some book ext:epub`
+
+Here is the full guide from libgen.gs. 
 
 For more precise searches, use these operators:
 
