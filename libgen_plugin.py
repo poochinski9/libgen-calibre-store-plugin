@@ -114,9 +114,19 @@ def build_search_result(tr):
     tds = tr.find_all("td")
     s = SearchResult()
 
-    # Extracting the title
-    title_links = tds[title_index].find_all("a", href=True)
-    s.title = " ".join(link.text.strip() for link in title_links if link.text.strip())
+    # Extracting all text from title cell
+    title_td = tds[title_index]
+    all_text = title_td.get_text(separator='\n', strip=True)
+    text_parts = [part.strip() for part in all_text.split('\n') if part.strip()]
+
+    # Remove duplicates
+    unique_parts = []
+    for part in text_parts:
+        if part not in unique_parts:
+            unique_parts.append(part)
+
+    # Join all parts with " - "
+    s.title = " - ".join(unique_parts)
 
     # Extracting the author
     s.author = tds[author_index].text.strip()
@@ -139,7 +149,7 @@ def build_search_result(tr):
 
     # Details url:
     try:
-        s.detail_item = BASE_URL + first_link_in_last_td["href"].replace(
+        s.detail_item = first_link_in_last_td["href"].replace(
             "get.php", "ads.php"
         )
     except:
