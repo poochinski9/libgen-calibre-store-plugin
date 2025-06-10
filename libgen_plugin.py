@@ -152,6 +152,8 @@ def build_search_result(tr):
         s.detail_item = first_link_in_last_td["href"].replace(
             "get.php", "ads.php"
         )
+        if not s.detail_item.startswith("http"):
+            s.detail_item = BASE_URL + s.detail_item
     except:
         s.detail_item = None
 
