@@ -16,8 +16,9 @@ from calibre.gui2.store import StorePlugin
 from calibre.gui2.store.basic_config import BasicStoreConfig
 from calibre.gui2.store.search_result import SearchResult
 from calibre.gui2.store.web_store_dialog import WebStoreDialog
+from urllib.request import urlopen
 
-BASE_URL = "https://libgen.gs"
+LIBGEN_MIRRORS = ["https://libgen.li", "https://libgen.gs", "https://libgen.is", "https://libgen.st", "https://libgen.rs"]
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"
 
 # Declare global variables at the module level
@@ -29,6 +30,7 @@ pages_index = None
 size_index = None
 ext_index = None
 mirrors_index = None
+libgen_url = None
 
 # Configure logging
 logging.basicConfig(
@@ -36,14 +38,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 #####################################################################
 # Plug-in base class
 #####################################################################
 def search_libgen(query, max_results=10, timeout=60):
     res = "25" if max_results <= 25 else "50" if max_results <= 50 else "100"
     encoded_query = urllib.parse.quote(query)
-    search_url = f"{BASE_URL}/index.php?req={encoded_query}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res={res}&covers=on&gmode=on&filesuns=all"
+    search_url = f"{libgen_url}/index.php?req={encoded_query}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res={res}&covers=on&gmode=on&filesuns=all"
 
     br = browser(user_agent=USER_AGENT)
     raw = br.open(search_url).read()
@@ -68,6 +69,17 @@ def search_libgen(query, max_results=10, timeout=60):
 
     return results[:max_results]
 
+# URL check class
+def check_url(LIBGEN_MIRRORS):
+    for mirror in LIBGEN_MIRRORS:
+        try: 
+            code = urlopen(mirror).code
+        except:
+            continue
+        if code == 200:
+            return mirror
+        else:
+            continue
 
 def extract_indices(soup):
     elements = ["Author(s)", "Year", "Pages", "Size", "Ext", "Mirrors"]
@@ -153,7 +165,7 @@ def build_search_result(tr):
             "get.php", "ads.php"
         )
         if not s.detail_item.startswith("http"):
-            s.detail_item = BASE_URL + s.detail_item
+            s.detail_item = libgen_url + s.detail_item
     except:
         s.detail_item = None
 
@@ -168,14 +180,14 @@ def build_search_result(tr):
         logger.exception("Error extracting image src")
 
     if image_src:
-        s.cover_url = BASE_URL + image_src
+        s.cover_url = libgen_url + image_src
 
     return s
 
 
 class LibgenStorePlugin(BasicStoreConfig, StorePlugin):
     def open(self, parent=None, detail_item=None, external=False):
-        url = BASE_URL
+        url = libgen_url
 
         if external or self.config.get("open_external", False):
             open_url(QUrl(url_slash_cleaner(detail_item if detail_item else url)))
@@ -216,6 +228,7 @@ class LibgenStorePlugin(BasicStoreConfig, StorePlugin):
         for result in search_libgen(query, max_results=max_results, timeout=timeout):
             yield result
 
+libgen_url = check_url(LIBGEN_MIRRORS)
 
 if __name__ == "__main__":
     query_string = " ".join(sys.argv[1:])
