@@ -18,7 +18,8 @@ from calibre.gui2.store.search_result import SearchResult
 from calibre.gui2.store.web_store_dialog import WebStoreDialog
 from urllib.request import urlopen
 
-LIBGEN_MIRRORS = ["https://libgen.li", "https://libgen.gs", "https://libgen.is", "https://libgen.st", "https://libgen.rs"]
+# Live instances can be checked at https://open-slum.org
+LIBGEN_MIRRORS = ["https://libgen.bz", "https://libgen.vg", "https://libgen.gl", "https://libgen.la"]
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"
 
 # Declare global variables at the module level
