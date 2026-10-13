@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # License: GPLv3 Copyright: 2021, winnbyte
-store_version = 8  # Needed for dynamic plugin loading
+store_version = 9  # Needed for dynamic plugin loading
 
 __license__ = "GPLv3"
 __copyright__ = "poochinski9"
@@ -11,7 +11,7 @@ from calibre.customize import StoreBase
 
 class LibgenStore(StoreBase):
     name = "Library Genesis"
-    version = (1, 5, 1)
+    version = (1, 6, 0)
     description = "Searches for books on Library Genesis"
     author = "poochinski9"
     drm_free_only = True

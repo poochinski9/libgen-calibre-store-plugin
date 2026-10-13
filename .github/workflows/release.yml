@@ -1,0 +1,75 @@
+name: Build and publish plugin ZIP
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Calibre plugin ZIP
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          python3 - "$TAG_NAME" <<'PY'
+          import ast
+          from pathlib import Path
+          import sys
+          from zipfile import ZIP_DEFLATED, ZipFile
+
+          tag_name = sys.argv[1]
+          init_tree = ast.parse(Path("__init__.py").read_text(encoding="utf-8"))
+          version = next(
+              ast.literal_eval(statement.value)
+              for statement in init_tree.body
+              if isinstance(statement, ast.Assign)
+              and any(
+                  isinstance(target, ast.Name) and target.id == "version"
+                  for target in statement.targets
+              )
+          )
+          version_text = ".".join(str(part) for part in version)
+
+          if tag_name != version_text:
+              raise SystemExit(
+                  f"Tag {tag_name!r} must match the plugin version {version_text!r}"
+              )
+
+          files = (
+              "__init__.py",
+              "libgen_plugin.py",
+              "plugin-import-name-store_libgen.txt",
+              "LICENSE",
+              "README.md",
+          )
+          missing_files = [name for name in files if not Path(name).is_file()]
+          if missing_files:
+              raise SystemExit(f"Missing plugin files: {', '.join(missing_files)}")
+
+          archive = Path(f"libgen-plugin-{version_text}.zip")
+          with ZipFile(archive, "w", ZIP_DEFLATED) as plugin_zip:
+              for name in files:
+                  plugin_zip.write(name, arcname=name)
+          print(f"Built {archive}")
+          PY
+
+      - name: Attach ZIP to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          ARCHIVE="libgen-plugin-${TAG_NAME}.zip"
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "$ARCHIVE" --clobber
+          else
+            gh release create "$TAG_NAME" "$ARCHIVE" \
+              --title "$TAG_NAME" \
+              --generate-notes
+          fi

@@ -10,16 +10,35 @@ This is a plugin for [Calibre](https://calibre-ebook.com/) which allows you to s
 - Restart Calibre
 - Make sure the store is enabled under **Get Books -> Choose Stores**
 
+## Releases
+
+Push a version tag such as `1.6.0` to build `libgen-plugin-1.6.0.zip` and attach it to a GitHub Release. The tag must match the version in `__init__.py`.
+
 ## Tips
 
 Calibre defaults to a maximum of 10 results returned at a time. You can change this maximum at **Get Books -> Configure -> Configure Search -> Maximum number of results...**
 
 For better results and to get the format you are looking for, narrow down your search by title and author as much as possible.
 
+## Choosing a mirror
+
+Open **Preferences -> Plugins**, select **Library Genesis** under **Store plugins**, and click **Customize plugin**. The **Mirror** dropdown lets you choose a specific mirror or automatically select the first working JSON API, then fall back to a legacy homepage. After changing mirrors, search again; existing results retain their original book links.
+
+Version 1.6.0 supports two frontends:
+
+- Legacy HTML tables: `libgen.bz`, `libgen.vg`, `libgen.gl`, and `libgen.la`.
+- JSON API frontend: `libgen.me`, `libgen.net`, `libgen.xyz`, `libgen.pw`, and `randombook.org`.
+
+The JSON frontend supports search pagination and resolves its download landing pages into explicit file endpoints. If link resolution fails, the book page remains available for opening in a browser. HTTP 403/500 errors from the final file server can still prevent a download after Calibre receives the URL.
+
+JSON frontend results show year and language. File sizes are omitted because the API's size units have not been independently verified.
+
 
 ## Advanced Search Mode (Google Mode)
 
 Version 1.4.1 and greater supports Google mode.  Use the "title" field in calibre for this.
+
+These operators apply to the legacy HTML table frontend. The JSON frontend receives the query as entered and uses its own search behavior.
 
 For example, to search only `epub` format, type `Some book ext:epub`
 
